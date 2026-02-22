@@ -38,8 +38,10 @@ async def on_startup():
 
 def main():
     """CLI entry point for the storage server"""
-    # Using 8082 to ensure fresh socket
-    uvicorn.run("tgstorage.api:api", host="0.0.0.0", port=8082, reload=False, workers=1)
+    # Heroku දෙන Port එක කියවගන්නවා, නැත්නම් default 8082 ගන්නවා
+    port = int(os.environ.get("PORT", 8082))
+    
+    uvicorn.run("tgstorage.api:api", host="0.0.0.0", port=port, reload=False, workers=1)
 
 if __name__ == "__main__":
     main()
