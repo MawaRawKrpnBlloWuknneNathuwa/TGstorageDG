@@ -11,13 +11,13 @@ logger = logging.getLogger(__name__)
 class BotCluster:
     def __init__(self):
         self.bots = []
-        self.bot_names = {}  # අලුතින් මේක එකතු කරන්න
+        self.bot_names = {}
         self.current_idx = 0
         self._initialize_bots()
 
     def _initialize_bots(self):
         self.bots = []
-        self.bot_names = {} # මේකත් reset කරන්න
+        self.bot_names = {}
         proxy_url = None
         proxy_host = getattr(settings, "PROXY_HOST", None)
         proxy_port = getattr(settings, "PROXY_PORT", None)
@@ -35,6 +35,7 @@ class BotCluster:
         for token in settings.bot_token_list:
             token_hash = hashlib.md5(token.encode()).hexdigest()[:8]
             bot = Bot(token=token, request=request)
+            # මීට පස්සේ bot._custom_name පාවිච්චි කරන්නේ නැහැ
             self.bot_names[id(bot)] = f"bot_{token_hash}"
             self.bots.append(bot)
 
@@ -42,7 +43,6 @@ class BotCluster:
         if not self.bots:
             self._initialize_bots()
         for bot in self.bots:
-            # නම ගන්න විදිහ වෙනස් කරන්න:
             b_name = self.bot_names.get(id(bot), "Unknown")
             try:
                 me = await asyncio.wait_for(bot.get_me(), timeout=10)
@@ -62,6 +62,25 @@ class BotCluster:
         self.current_idx = (self.current_idx + 1) % len(self.bots)
         return bot
 
+    async def get_healthy_bot(self):
+        if not self.bots:
+            self._initialize_bots()
+            
+        for _ in range(len(self.bots)):
+            bot = self.get_bot()
+            if not bot: continue
+            b_name = self.bot_names.get(id(bot), "Unknown")
+            try:
+                await asyncio.wait_for(bot.get_me(), timeout=5)
+                return bot
+            except:
+                logger.warning(f"Bot {b_name} failed health check, trying another...")
+                continue
+        return None
+
+    # ... අනිත් function (send_video, delete_messages) වල කිසිම තැනක 
+    # bot._custom_name පාවිච්චි නොකරන්න. 
+    # (ඔයාගේ අනිත් function වල අවුලක් නැහැ දැන්)
     async def delete_messages(self, chat_id, message_ids):
         bot = self.get_bot()
         if not bot:
@@ -75,20 +94,6 @@ class BotCluster:
             except Exception as e:
                 logger.error(f"Error deleting message {msg_id}: {e}")
 
-    async def get_healthy_bot(self):
-        if not self.bots:
-            self._initialize_bots()
-            
-        for _ in range(len(self.bots)):
-            bot = self.get_bot()
-            if not bot: continue
-            try:
-                await asyncio.wait_for(bot.get_me(), timeout=5)
-                return bot
-            except:
-                logger.warning(f"Bot {self.bot_names.get(id(bot))} failed health check...")
-                continue
-        return None
 
     async def send_video(self, chat_id, video, filename, supports_streaming=True):
         bot = await self.get_healthy_bot()
