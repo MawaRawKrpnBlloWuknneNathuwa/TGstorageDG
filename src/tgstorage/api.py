@@ -16,6 +16,10 @@ from .database import (
     list_files, get_stats, verify_key_db, init_db
 )
 from .bot import cluster
+# මේක function එක ඇතුළේ හෝ උඩින් දාන්න
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+# index.html තියෙන්නේ src/tgstorage ඇතුළේ නම්:
+INDEX_PATH = os.path.join(BASE_DIR, "index.html")
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -57,10 +61,21 @@ async def preflight_handler(request: Request, rest_of_path: str):
         "Access-Control-Allow-Headers": "*",
     })
 
-@api.get("/", response_class=HTMLResponse)
+@api.get("/")
 async def get_dashboard():
-    with open("index.html", "r", encoding="utf-8") as f:
-        return f.read()
+    # index.html එක කොහේ තිබුණත් නිවැරදි path එක ගන්න මේක උදව් වෙනවා
+    if not os.path.exists(INDEX_PATH):
+        # index.html එක parent directory එකේ තිබුණොත් ඒකත් චෙක් කරමු
+        alt_path = os.path.join(os.getcwd(), "index.html")
+        path_to_use = alt_path if os.path.exists(alt_path) else INDEX_PATH
+    else:
+        path_to_use = INDEX_PATH
+
+    try:
+        with open(path_to_use, "r", encoding="utf-8") as f:
+            return HTMLResponse(content=f.read())
+    except FileNotFoundError:
+        return HTMLResponse(content="<h1>Index.html not found!</h1><p>Please ensure index.html is in the correct folder.</p>", status_code=404)
 
 async def start_bot():
     await init_db()
