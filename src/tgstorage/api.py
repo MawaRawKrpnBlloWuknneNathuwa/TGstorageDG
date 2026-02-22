@@ -84,7 +84,6 @@ async def start_bot():
 @api.on_event("startup")
 async def startup():
     asyncio.create_task(start_bot())
-
 @api.post("/upload")
 async def upload(
     file: UploadFile = File(...), 
@@ -104,12 +103,10 @@ async def upload(
             return os.path.getsize(temp_path)
 
         file_size = await asyncio.to_thread(save_file)
-      # පරණ වැරදි පේළිය:
-# logger.info(f"Uploading {file.filename} via {bot._custom_name}")
-
-# අලුත් නිවැරදි පේළිය:
-bot_name = cluster.bot_names.get(id(bot), "Unknown Bot")
-logger.info(f"Uploading {file.filename} via {bot_name}")
+        
+        # මෙන්න මේ පේළි දෙක තමයි හරියටම තියෙන්න ඕනේ:
+        bot_name = cluster.bot_names.get(id(bot), "Unknown Bot")
+        logger.info(f"Uploading {file.filename} via {bot_name}")
         
         is_video = file.content_type and "video" in file.content_type.lower()
         
@@ -147,6 +144,7 @@ logger.info(f"Uploading {file.filename} via {bot_name}")
                 try: os.remove(temp_path)
                 except: pass
         await asyncio.to_thread(cleanup)
+        
 
 async def stream_file_response(file_data, filename, bot, request: Request):
     await increment_view_count(file_data['file_id'])
