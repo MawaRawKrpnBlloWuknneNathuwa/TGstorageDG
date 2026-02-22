@@ -104,7 +104,12 @@ async def upload(
             return os.path.getsize(temp_path)
 
         file_size = await asyncio.to_thread(save_file)
-        logger.info(f"Uploading {file.filename} via {bot._custom_name}")
+      # පරණ වැරදි පේළිය:
+# logger.info(f"Uploading {file.filename} via {bot._custom_name}")
+
+# අලුත් නිවැරදි පේළිය:
+bot_name = cluster.bot_names.get(id(bot), "Unknown Bot")
+logger.info(f"Uploading {file.filename} via {bot_name}")
         
         is_video = file.content_type and "video" in file.content_type.lower()
         
