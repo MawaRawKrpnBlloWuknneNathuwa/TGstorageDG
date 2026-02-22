@@ -11,11 +11,13 @@ logger = logging.getLogger(__name__)
 class BotCluster:
     def __init__(self):
         self.bots = []
+        self.bot_names = {}  # අලුතින් මේක එකතු කරන්න
         self.current_idx = 0
         self._initialize_bots()
 
     def _initialize_bots(self):
         self.bots = []
+        self.bot_names = {} # මේකත් reset කරන්න
         proxy_url = None
         proxy_host = getattr(settings, "PROXY_HOST", None)
         proxy_port = getattr(settings, "PROXY_PORT", None)
@@ -33,18 +35,20 @@ class BotCluster:
         for token in settings.bot_token_list:
             token_hash = hashlib.md5(token.encode()).hexdigest()[:8]
             bot = Bot(token=token, request=request)
-            bot._custom_name = f"bot_{token_hash}"
+            self.bot_names[id(bot)] = f"bot_{token_hash}"
             self.bots.append(bot)
 
     async def start_all(self):
         if not self.bots:
             self._initialize_bots()
         for bot in self.bots:
+            # නම ගන්න විදිහ වෙනස් කරන්න:
+            b_name = self.bot_names.get(id(bot), "Unknown")
             try:
                 me = await asyncio.wait_for(bot.get_me(), timeout=10)
-                logger.info(f"Bot {bot._custom_name} (@{me.username}) is ready.")
+                logger.info(f"Bot {b_name} (@{me.username}) is ready.")
             except Exception as e:
-                logger.error(f"Error verifying {bot._custom_name}: {e}")
+                logger.error(f"Error verifying {b_name}: {e}")
 
     async def stop_all(self):
         pass
