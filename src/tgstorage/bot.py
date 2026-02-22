@@ -86,7 +86,7 @@ class BotCluster:
                 await asyncio.wait_for(bot.get_me(), timeout=5)
                 return bot
             except:
-                logger.warning(f"Bot {bot._custom_name} failed health check, trying another...")
+                logger.warning(f"Bot {self.bot_names.get(id(bot))} failed health check...")
                 continue
         return None
 
