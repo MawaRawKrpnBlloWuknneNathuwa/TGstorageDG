@@ -1,6 +1,7 @@
-tgstorage-cluster
+-e .
 fastapi
 uvicorn
 python-multipart
 python-dotenv
 httpx
+python-telegram-bot
